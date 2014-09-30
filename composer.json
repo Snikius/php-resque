@@ -1,0 +1,34 @@
+{
+	"name": "snikius/php-resque",
+	"type": "library",
+	"description": "",
+	"keywords": ["job", "background", "redis", "resque"],
+	"homepage": "https://github.com/Snikius/php-resque",
+	"repositories": [
+		{
+			"type": "vcs",
+			"url": "https://github.com/Snikius/php-resque"
+		}
+	],
+	"require": {
+		"php": ">=5.3.0",
+		"ext-pcntl": "*",
+		"colinmollenhour/credis": "~1.2",
+		"psr/log": "1.0.0"
+	},
+	"suggest": {
+		"ext-proctitle": "Allows php-resque to rename the title of UNIX processes to show the status of a worker.",
+		"ext-redis": "Native PHP extension for Redis connectivity. Credis will automatically utilize when available."
+	},
+	"require-dev": {
+		"phpunit/phpunit": "3.7.*"
+	},
+	"bin": [
+		"bin/resque"
+	],
+	"autoload": {
+		"psr-0": {
+			"Resque": "lib"
+		}
+	}
+}
