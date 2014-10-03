@@ -265,7 +265,7 @@ class Resque_Worker
 		}
 
 		if($blocking === true) {
-			$job = Resque_Job::reserveBlocking($queues, $timeout);
+			$job = Resque_Reserve::reserveBlocking($queues, $timeout);
 			if($job) {
 				$this->logger->log(Psr\Log\LogLevel::INFO, 'Found job on {queue}', array('queue' => $job->queue));
 				return $job;
@@ -273,7 +273,7 @@ class Resque_Worker
 		} else {
 			foreach($queues as $queue) {
 				$this->logger->log(Psr\Log\LogLevel::INFO, 'Checking {queue} for jobs', array('queue' => $queue));
-				$job = Resque_Job::reserve($queue);
+				$job = Resque_Reserve::reserve($queue);
 				if($job) {
 					$this->logger->log(Psr\Log\LogLevel::INFO, 'Found job on {queue}', array('queue' => $job->queue));
 					return $job;
