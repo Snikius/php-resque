@@ -1,5 +1,5 @@
 <?php
-use Jeremeamia\SuperClosure\SerializableClosure;
+use Illuminate\Support\SerializableClosure;
 /**
  * Base Resque class.
  *
@@ -45,13 +45,6 @@ class Resque
 		self::$redisDatabase = $database;
 		self::$redis         = null;
 	}
-        
-        
-        private static function serializeClosure(Closure $f) {
-            $superClosure=new SerializableClosure($f);
-            return serialize($superClosure);
-        }
-
 	/**
 	 * Return an instance of the Resque_Redis class instantiated for Resque.
 	 *
@@ -209,7 +202,7 @@ class Resque
 	public static function enqueue($queue, $call, $args = null, $trackStatus = false)
 	{
                 if($call instanceof Closure) {
-                    $serialized=self::serializeClosure($call);
+                    $serialized = serialize(new SerializableClosure($call));
                     $result = Resque_Job_Closure::create($queue, $serialized, $args, $trackStatus);
                     if ($result) {
                             Resque_Event::trigger('afterEnqueue', array(

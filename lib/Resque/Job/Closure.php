@@ -1,4 +1,5 @@
 <?php
+use Illuminate\Support\SerializableClosure;
 
 class Resque_Job_Closure extends Resque_Job {
     
@@ -12,14 +13,21 @@ class Resque_Job_Closure extends Resque_Job {
         return $this->_closure;
     }
     
+    public static function invokeSerializableClosure(SerializableClosure $serializable) {
+        $varibles=$serializable->getVariables();
+        foreach($varibles as $k=>$varib) {
+            $$k=$varib;
+        }
+        eval('$callback = '.$serializable->getCode());
+        $callback();
+    }
+ 
     public function perform() {
         try {
-                Resque_Event::trigger('beforePerform', $this);
-                
-                $closure=$this->getClosure();
-                $closure($this, $this->getArguments());
-                
-                Resque_Event::trigger('afterPerform', $this);
+            $closure=$this->getClosure();
+            Resque_Event::trigger('beforePerform', $this);
+            Resque_Job_Closure::invokeSerializableClosure($closure);
+            Resque_Event::trigger('afterPerform', $this);
         }
         catch(Resque_Job_DontPerform $e) {
                 return false;

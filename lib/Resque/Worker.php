@@ -167,13 +167,11 @@ class Resque_Worker
 
 				$job = $this->reserve($blocking, $interval);
 			}
-
 			if(!$job) {
 				// For an interval of 0, break now - helps with unit testing etc
 				if($interval == 0) {
 					break;
 				}
-
 				if($blocking === false)
 				{
 					// If no job was found, we sleep for $interval before continuing and checking again
@@ -190,8 +188,6 @@ class Resque_Worker
 
 				continue;
 			}
-
-			$this->logger->log(Psr\Log\LogLevel::NOTICE, 'Starting work on {job}', array('job' => $job));
 			Resque_Event::trigger('beforeFork', $job);
 			$this->workingOn($job);
 
@@ -201,18 +197,15 @@ class Resque_Worker
 			if ($this->child === 0 || $this->child === false) {
 				$status = 'Processing ' . $job->queue . ' since ' . strftime('%F %T');
 				$this->updateProcLine($status);
-				$this->logger->log(Psr\Log\LogLevel::INFO, $status);
 				$this->perform($job);
 				if ($this->child === 0) {
 					exit(0);
 				}
 			}
-
 			if($this->child > 0) {
 				// Parent process, sit and wait
 				$status = 'Forked ' . $this->child . ' at ' . strftime('%F %T');
 				$this->updateProcLine($status);
-				$this->logger->log(Psr\Log\LogLevel::INFO, $status);
 
 				// Wait until the child process finishes before continuing
 				pcntl_wait($status);
@@ -223,11 +216,9 @@ class Resque_Worker
 					));
 				}
 			}
-
 			$this->child = null;
 			$this->doneWorking();
 		}
-
 		$this->unregisterWorker();
 	}
 
@@ -243,13 +234,11 @@ class Resque_Worker
 			$job->perform();
 		}
 		catch(Exception $e) {
-			$this->logger->log(Psr\Log\LogLevel::CRITICAL, '{job} has failed {stack}', array('job' => $job, 'stack' => $e->getMessage()));
 			$job->fail($e);
 			return;
 		}
 
 		$job->updateStatus(Resque_Job_Status::STATUS_COMPLETE);
-		$this->logger->log(Psr\Log\LogLevel::NOTICE, '{job} has finished', array('job' => $job));
 	}
 
 	/**
