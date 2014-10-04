@@ -4,22 +4,14 @@ class Resque_Job_Class extends Resque_Job {
     
     private $instance;
     private $method;
-    
-    const INSTANCE_DEFAULT_METHOD = "fire";
-        
-    const INSTANCE_METHOD_NAME = "_instance_method";
-    
+     
     public function getInstance() {     
         if (!is_null($this->instance)) {
                 return $this->instance;
         }
 
-        $arguments=$this->getArguments();
-        $this->method = Resque_Job_Class::INSTANCE_DEFAULT_METHOD;
+        $this->method = $this->payload['method'];
         $class = ucfirst($this->payload['class']);
-        if(isset($arguments[Resque_Job_Class::INSTANCE_METHOD_NAME])) {
-            $this->method = $arguments[Resque_Job_Class::INSTANCE_METHOD_NAME];
-        }
 
         if(!class_exists($class)) {
                 throw new Resque_Exception(
@@ -40,7 +32,7 @@ class Resque_Job_Class extends Resque_Job {
         return $this->instance;
     }
     
-    public static function create($queue, $class, $args = null, $monitor = false) {
+    public static function create($queue, $class, $args = null, $monitor = false, $method = 'fire') {
             if($args !== null && !is_array($args)) {
                     throw new InvalidArgumentException(
                             'Supplied $args must be an array.'
@@ -49,6 +41,7 @@ class Resque_Job_Class extends Resque_Job {
             $id = md5(uniqid('', true));
             Resque::push($queue, array(
                     'class'	=> $class,
+                    'method'	=> $method,
                     'args'	=> array($args),
                     'id'	=> $id,
                     'queue_time' => microtime(true),
@@ -76,14 +69,14 @@ class Resque_Job_Class extends Resque_Job {
 
                 $instance = $this->getInstance();
                 if(method_exists($instance, 'setUp')) {
-                        $instance->setUp();
+                    $instance->setUp();
                 }
                 
                 $method=$this->method;
                 $instance->$method($this,$this->getArguments());
 
                 if(method_exists($instance, 'tearDown')) {
-                        $instance->tearDown();
+                    $instance->tearDown();
                 }
 
                 Resque_Event::trigger('afterPerform', $this);

@@ -196,10 +196,10 @@ class Resque
 	 * @param string $class The name of the class that contains the code to execute the job.
 	 * @param array $args Any optional arguments that should be passed when the job is executed.
 	 * @param boolean $trackStatus Set to true to be able to monitor the status of a job.
-	 *
+	 * @param string $method method name to invoke in job class.
 	 * @return string
 	 */
-	public static function enqueue($queue, $call, $args = null, $trackStatus = false)
+	public static function enqueue($queue, $call, $args = null, $trackStatus = false, $method = 'fire')
 	{
                 if($call instanceof Closure) {
                     $serialized = serialize(new SerializableClosure($call));
@@ -215,13 +215,14 @@ class Resque
                     return $result;
                 }
                 
-		$result = Resque_Job_Class::create($queue, $call, $args, $trackStatus);
+		$result = Resque_Job_Class::create($queue, $call, $args, $trackStatus, $method);
 		if ($result) {
 			Resque_Event::trigger('afterEnqueue', array(
 				'class' => $call,
 				'args'  => $args,
 				'queue' => $queue,
 				'id'    => $result,
+                                'method'    => $method,
 			));
 		}
 
