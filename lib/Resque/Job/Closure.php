@@ -13,20 +13,20 @@ class Resque_Job_Closure extends Resque_Job {
         return $this->_closure;
     }
     
-    public static function invokeSerializableClosure(SerializableClosure $serializable) {
+    public static function invokeSerializableClosure(SerializableClosure $serializable, Resque_Job $job ,array $data = []) {
         $varibles=$serializable->getVariables();
         foreach($varibles as $k=>$varib) {
             $$k=$varib;
         }
         eval('$callback = '.$serializable->getCode());
-        $callback();
+        $callback($job, $data);
     }
  
     public function perform() {
         try {
             $closure=$this->getClosure();
             Resque_Event::trigger('beforePerform', $this);
-            Resque_Job_Closure::invokeSerializableClosure($closure);
+            Resque_Job_Closure::invokeSerializableClosure($closure, $this, $this->getArguments());
             Resque_Event::trigger('afterPerform', $this);
         }
         catch(Resque_Job_DontPerform $e) {
@@ -44,13 +44,15 @@ class Resque_Job_Closure extends Resque_Job {
                     );
             }
             $id = md5(uniqid('', true));
-            Resque::push($queue, array(
+            $data=array(
                     'class'	=> $class,
                     'args'	=> array($args),
                     'id'	=> $id,
                     'closure'   => true,
                     'queue_time' => microtime(true),
-            ));
+            );
+            Log::info('Push closure:'.  json_encode($data));
+            Resque::push($queue,$data);
 
             if($monitor) {
                     Resque_Job_Status::create($id);
